@@ -30,4 +30,52 @@ namespace nnet {
 
     return result;
   }
+
+  TrainingLayer::TrainingLayer(int inputDimension, int outputDimension, ActivationFunction* act)
+    : Layer(inputDimension, outputDimension, act) {
+    input = new float[inputDimension];
+    weighedInput = new float[outputDimension];
+    output = new float[outputDimension];
+    weightGradients = new float[inputDimension * outputDimension];
+    biasGradients = new float[outputDimension];
+  }
+
+  TrainingLayer::~TrainingLayer() {
+    delete[] input;
+    delete[] weighedInput;
+    delete[] output;
+    delete[] weightGradients;
+    delete[] biasGradients;
+  }
+
+  void TrainingLayer::updateWeightsAndBiases(float learningRate) {
+    for (int i = 0; i < outputDimension; ++i) {
+      for (int j = 0; j < inputDimension; ++j) {
+	weights[i * inputDimension + j] -= learningRate * weightGradients[i * inputDimension + j];
+      }
+    }
+
+    for (int i = 0; i < outputDimension; ++i) {
+      biases[i] -= learningRate * biasGradients[i];
+    }
+  }
+
+  void TrainingLayer::backward(float* predictedOutput, float* targetOutput) {
+    float* outputGradients = new float[outputDimension];
+    for (int i = 0; i < outputDimension; ++i) {
+      outputGradients[i] = 2.0 * (predictedOutput[i] - targetOutput[i]);
+    }
+
+    for (int i = 0; i < outputDimension; ++i) {
+      biasGradients[i] = outputGradients[i] * activationFunction->derivative(weighedInput[i]);
+    }
+
+    for (int i = 0; i < outputDimension; ++i) {
+      for (int j = 0; j < inputDimension; ++j) {
+	weightGradients[i * inputDimension + j] = outputGradients[i] * activationFunction->derivative(weighedInput[i]) * input[j];
+      }
+    }
+
+    delete[] outputGradients;
+  }
 }

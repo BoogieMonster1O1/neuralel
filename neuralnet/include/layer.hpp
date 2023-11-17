@@ -17,4 +17,23 @@ namespace nnet {
 
     float* forward(float* input);
   };
+
+  class TrainingLayer: public Layer {
+  public:
+    float* input;
+    float* weighedInput;
+    float* output;
+    float* weightGradients;
+    float* biasGradients;
+
+    TrainingLayer(int inputDimension, int outputDimension, ActivationFunction* act);
+
+    ~TrainingLayer();
+
+    float* forward(float* input) override;
+    
+    void updateWeightsAndBiases(float learningRate);
+
+    void backward(float* predictedOutput, float* targetOutput);
+  };
 }

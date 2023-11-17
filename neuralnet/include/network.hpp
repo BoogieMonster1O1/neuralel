@@ -12,4 +12,9 @@ namespace nnet {
 
     void addLayer(Layer *layer);
   };
+
+  class TrainingNeuralNetwork: public NeuralNetwork {
+  public:
+    void addLayer(Layer *layer) override;
+  };
 }
