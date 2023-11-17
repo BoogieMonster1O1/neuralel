@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include "activation.hpp"
 
 namespace nnet {
@@ -15,13 +16,13 @@ namespace nnet {
 
     ~Layer();
 
-    float* forward(float* input);
+    virtual float* forward(float* input);
   };
 
   class TrainingLayer: public Layer {
   public:
     float* input;
-    float* weighedInput;
+    float* weightedInput;
     float* output;
     float* weightGradients;
     float* biasGradients;
@@ -30,10 +31,10 @@ namespace nnet {
 
     ~TrainingLayer();
 
-    float* forward(float* input) override;
+    float* forward(float* input);
     
     void updateWeightsAndBiases(float learningRate);
 
-    void backward(float* predictedOutput, float* targetOutput);
+    void backward(float* targetOutput);
   };
 }

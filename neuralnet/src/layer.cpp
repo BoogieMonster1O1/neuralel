@@ -33,19 +33,42 @@ namespace nnet {
 
   TrainingLayer::TrainingLayer(int inputDimension, int outputDimension, ActivationFunction* act)
     : Layer(inputDimension, outputDimension, act) {
-    input = new float[inputDimension];
-    weighedInput = new float[outputDimension];
-    output = new float[outputDimension];
-    weightGradients = new float[inputDimension * outputDimension];
-    biasGradients = new float[outputDimension];
+    this->input = new float[inputDimension];
+    this->weightedInput = new float[outputDimension];
+    this->output = new float[outputDimension];
+    this->weightGradients = new float[inputDimension * outputDimension];
+    this->biasGradients = new float[outputDimension];
   }
 
   TrainingLayer::~TrainingLayer() {
     delete[] input;
-    delete[] weighedInput;
+    delete[] weightedInput;
     delete[] output;
     delete[] weightGradients;
     delete[] biasGradients;
+  }
+
+  float* TrainingLayer::forward(float* input) {
+    std::memcpy(this->input, input, sizeof(float) * this->inputDimension);
+    
+    float* result = new float[this->outputDimension];
+    for (int i = 0; i < this->outputDimension; ++i) {
+      result[i] = 0;
+      for (int j = 0; j < this->inputDimension; ++j) {
+	result[i] += input[j] * this->weights[i * this->inputDimension + j];
+      }
+      result[i] += this->biases[i];
+    }
+
+    std::memcpy(this->weightedInput, result, sizeof(float) * this->outputDimension);
+
+    for (int i = 0; i < this->outputDimension; ++i) {
+      result[i] = this->activationFunction->activate(result[i]);
+    }
+
+    std::memcpy(this->output, result, sizeof(float) * this->outputDimension);
+
+    return result;
   }
 
   void TrainingLayer::updateWeightsAndBiases(float learningRate) {
@@ -60,19 +83,19 @@ namespace nnet {
     }
   }
 
-  void TrainingLayer::backward(float* predictedOutput, float* targetOutput) {
+  void TrainingLayer::backward(float* targetOutput) {
     float* outputGradients = new float[outputDimension];
     for (int i = 0; i < outputDimension; ++i) {
-      outputGradients[i] = 2.0 * (predictedOutput[i] - targetOutput[i]);
+      outputGradients[i] = 2.0 * (this->output[i] - targetOutput[i]);
     }
 
     for (int i = 0; i < outputDimension; ++i) {
-      biasGradients[i] = outputGradients[i] * activationFunction->derivative(weighedInput[i]);
+      biasGradients[i] = outputGradients[i] * activationFunction->derivative(weightedInput[i]);
     }
 
     for (int i = 0; i < outputDimension; ++i) {
       for (int j = 0; j < inputDimension; ++j) {
-	weightGradients[i * inputDimension + j] = outputGradients[i] * activationFunction->derivative(weighedInput[i]) * input[j];
+	weightGradients[i * inputDimension + j] = outputGradients[i] * activationFunction->derivative(weightedInput[i]) * input[j];
       }
     }
 
