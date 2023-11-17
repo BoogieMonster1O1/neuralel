@@ -14,5 +14,7 @@ namespace nnet {
     Layer(int inputDimension, int outputDimension, ActivationFunction* act);
 
     ~Layer();
+
+    float* forward(float* input);
   };
 }
